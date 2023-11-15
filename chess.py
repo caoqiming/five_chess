@@ -122,6 +122,11 @@ class chess:
         return EMPTY
 
 
+class chess_palyer:
+    def move(self):
+        return
+
+
 if __name__ == "__main__":
     a = chess()
     a.put(1, 1, 2)
