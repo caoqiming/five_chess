@@ -1,15 +1,24 @@
 import numpy as np
+import pickle
+from typing import List, Dict, Tuple
 
 BOARD_SIZE = 15
 EMPTY = 0
 BLACK = 1
 WHITE = 2
+RED = 3  # for record mode, force move
+GREEN = 4  # for record mode, empty
 DIRECNTIONS = [
     ((-1, 0), (1, 0)),
     ((0, -1), (0, 1)),
     ((-1, -1), (1, 1)),
     ((-1, 1), (1, -1)),
 ]
+
+
+class situation:
+    board: np.ndarray
+    next_move: List[Tuple[int, int]]  # next is black turn
 
 
 class chess:
@@ -21,8 +30,8 @@ class chess:
     def validate(self, x: int, y: int) -> bool:
         return x >= 0 and x < BOARD_SIZE and y >= 0 and y < BOARD_SIZE
 
-    def set_board(self, newboard):
-        self.board = newboard
+    def get_board(self):
+        return self.board
 
     def reset(self):
         self.board = np.zeros((BOARD_SIZE, BOARD_SIZE))
@@ -40,17 +49,18 @@ class chess:
     def show(self):
         print(self.board)
 
-    def put(self, x: int, y: int, color: int):
-        if self.game_over:
+    def put(self, x: int, y: int, color: int, force: bool = False):
+        if not force and (self.game_over or self.board[x][y] != EMPTY):
             return
 
-        if color != BLACK and color != WHITE:
+        if color != BLACK and color != WHITE and color != RED and color != GREEN:
             raise Exception("fail to put, invalid color %d" % (color))
-        if self.board[x][y] != EMPTY:
-            raise Exception("fail to put, (%d,%d) is not empty" % (x, y))
         self.board[x][y] = color
 
     def game_put(self, x: int, y: int):
+        if self.board[x][y] != EMPTY:
+            return
+
         self.round_n += 1
         if self.round_n % 2 == 1:
             self.put(x, y, BLACK)
@@ -121,25 +131,64 @@ class chess:
                     mask[one[0]][one[1]] |= one[2]
         return EMPTY
 
+    def save_record(self) -> situation:
+        s = situation()
+        s.board = self.board.copy()
+        return
+
+
+class situations:
+    name: str = "unnamed"
+    data: List[situation] = []
+
+    def __init__(self, name):
+        self.name = name
+
+    def append(self, s: situation):
+        self.data.append(s)
+
+    def dump(self):
+        with open("./data/%s.dat" % (self.name), "wb") as file:
+            pickle.dump(self.data, file)
+
+    def load(self):
+        with open("./data/%s.dat" % (self.name), "rb") as file:
+            self.data = pickle.load(file)
+
 
 class chess_palyer:
+    board = np.zeros((BOARD_SIZE, BOARD_SIZE), dtype=np.int32)
+
+    def set_board(self, new_board: np.ndarray):
+        self.board = new_board
+
     def move(self):
+        return
+
+    def sub_matrix_exists(matrix, sub_matrix):
+        rows, cols = matrix.shape
+        sub_rows, sub_cols = sub_matrix.shape
+        for i in range(rows - sub_rows + 1):
+            for j in range(cols - sub_cols + 1):
+                if np.array_equal(
+                    matrix[i : i + sub_rows, j : j + sub_cols], sub_matrix
+                ):
+                    return True
+        return False
+
+    def force_move(self):
         return
 
 
 if __name__ == "__main__":
-    a = chess()
-    a.put(1, 1, 2)
-    a.put(1, 2, 2)
-    a.put(1, 3, 2)
-    a.put(1, 4, 2)
-    a.put(2, 1, 2)
-    a.put(2, 2, 2)
-    a.put(2, 3, 2)
-    a.put(2, 4, 2)
-    print(a.check_all())
-    a.put(1, 5, 2)
-
-    print(a.check_all())
-
-    a.show()
+    ss = situations("test")
+    s = situation()
+    s.board = np.zeros((3, 3), dtype=np.int32)
+    s.next_move = [(2, 3)]
+    ss.append(s)
+    s = situation()
+    s.board = np.zeros((3, 3), dtype=np.int32)
+    s.next_move = [(2, 2)]
+    ss.append(s)
+    print(ss.data[0].next_move)
+    print(ss.data[1].next_move)
