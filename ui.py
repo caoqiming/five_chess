@@ -16,7 +16,6 @@ MODE = PVP
 # record 模式相关变量
 record_current_color = chess.BLACK
 record_situations = chess.situations("new_record")
-record_situation = chess.situation()
 # 用于展示的棋盘
 five_chess = chess.chess()
 
@@ -61,26 +60,42 @@ def handle_click(x, y):
 def handle_key(key):
     global record_current_color
     global record_situations
-    global record_situation
     if key == pygame.K_r:
         five_chess.reset()
     elif key == pygame.K_BACKSPACE:
         five_chess.regrate()
     if MODE == RECORD:
-        if key == pygame.K_w:
+        if key == pygame.K_0:
             record_current_color = chess.WHITE
-        elif key == pygame.K_b:
+        elif key == pygame.K_1:
             record_current_color = chess.BLACK
-        elif key == pygame.K_f:  # force next move
-            record_current_color = chess.RED
-        elif key == pygame.K_g:  # need to be empty
+        elif key == pygame.K_3:  # need to be empty
             record_current_color = chess.GREEN
+        elif key == pygame.K_4:  # force next move
+            record_current_color = chess.RED
         elif key == pygame.K_n:  # next situation
-            record_situations.append(record_situation)
-            record_situation = chess.situation()
+            record_situations.append_situation_from_board(five_chess.get_board())
             five_chess.reset()
         elif key == pygame.K_s:  # save
             record_situations.dump()
+        elif key == pygame.K_p:
+            record_situations.print()
+        elif key == pygame.K_q:  # 设置当前想要查看的索引，从1开始
+            index = int(input("input index: "))
+            record_situations.set_current_index(index)
+            board = record_situations.get_current_situation_board()
+            five_chess.set_board(board)
+        elif key == pygame.K_z:
+            record_situations.set_current_index(record_situations.current_index - 1)
+            board = record_situations.get_current_situation_board()
+            five_chess.set_board(board)
+        elif key == pygame.K_x:
+            record_situations.set_current_index(record_situations.current_index + 1)
+            board = record_situations.get_current_situation_board()
+            five_chess.set_board(board)
+        elif key == pygame.K_d:
+            record_situations.delete_current_situation()
+
     return
 
 
